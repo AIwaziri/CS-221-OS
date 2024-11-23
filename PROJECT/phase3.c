@@ -55,7 +55,7 @@ void clear_history(char history[][MAX_INPUT_SIZE], int *history_count)
 void *run_command(void *arg)
 {
     char **args = (char **)arg;
-    if (execvp(args[0], args) < 0)
+    if (execvp(args[0], args) < 0) ///////////////// you should use execvp instead of execv and use synchronizationto update history
     {
         perror("execvp failed");
         exit(EXIT_FAILURE);
