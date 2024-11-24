@@ -55,7 +55,7 @@ void clear_history(char history[][MAX_INPUT_SIZE], int *history_count)
 void *run_command(void *arg)
 {
     char **args = (char **)arg;
-    if (execvp(args[0], args) < 0) ///////////////// you should use execvp instead of execv and use synchronizationto update history
+    if (execvp(args[0], args) < 0)
     {
         perror("execvp failed");
         exit(EXIT_FAILURE);
@@ -119,7 +119,7 @@ int main()
         // Handle exit command
         if (args[0] != NULL && strcmp(args[0], "exit") == 0)
         {
-            printf("exiting...\n");
+            printf("Exiting...\n");
             break;
         }
 
@@ -177,53 +177,48 @@ int main()
             }
             cmd2[j] = NULL;
 
-            // Create threads
-            pthread_t thread1, thread2;
-            char *cmd1_copy[MAX_ARG_SIZE], *cmd2_copy[MAX_ARG_SIZE];
-
-            // Copy cmd1 arguments
-            for (int k = 0; cmd1[k] != NULL; k++)
+            // Fork the first command
+            pid_t pid1 = fork();
+            if (pid1 < 0)
             {
-                cmd1_copy[k] = strdup(cmd1[k]);
-            }
-            cmd1_copy[j] = NULL;
-
-            // Copy cmd2 arguments
-            for (int k = 0; cmd2[k] != NULL; k++)
-            {
-                cmd2_copy[k] = strdup(cmd2[k]);
-            }
-            cmd2_copy[j] = NULL;
-
-            if (pthread_create(&thread1, NULL, run_command, (void *)cmd1_copy) != 0)
-            {
-                perror("pthread_create failed");
+                perror("Fork failed for first command");
                 continue;
             }
-            if (pthread_create(&thread2, NULL, run_command, (void *)cmd2_copy) != 0)
+            else if (pid1 == 0)
             {
-                perror("pthread_create failed");
+                // Child process for first command
+                if (execvp(cmd1[0], cmd1) < 0)
+                {
+                    perror("execvp failed for first command");
+                    exit(EXIT_FAILURE);
+                }
+            }
+
+            // Fork the second command
+            pid_t pid2 = fork();
+            if (pid2 < 0)
+            {
+                perror("Fork failed for second command");
                 continue;
             }
-
-            // Wait for threads to finish
-            pthread_join(thread1, NULL);
-            pthread_join(thread2, NULL);
-
-            // Free allocated memory
-            for (int k = 0; cmd1_copy[k] != NULL; k++)
+            else if (pid2 == 0)
             {
-                free(cmd1_copy[k]);
+                // Child process for second command
+                if (execvp(cmd2[0], cmd2) < 0)
+                {
+                    perror("execvp failed for second command");
+                    exit(EXIT_FAILURE);
+                }
             }
-            for (int k = 0; cmd2_copy[k] != NULL; k++)
-            {
-                free(cmd2_copy[k]);
-            }
+
+            // Parent process waits for both commands to finish
+            waitpid(pid1, NULL, 0); // Wait for first command
+            waitpid(pid2, NULL, 0); // Wait for second command
 
             continue;
         }
 
-        // Fork a child process
+        // Fork a child process for other commands
         pid = fork();
         if (pid < 0)
         {
