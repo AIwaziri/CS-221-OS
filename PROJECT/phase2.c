@@ -44,6 +44,21 @@ void clear_history(char history[][MAX_INPUT_SIZE], int *history_count)
     printf("Command history cleared.\n");
 }
 
+int is_supported_command(char *command)
+{
+    const char *supported_commands[] = {
+        "help", "ls", "ps", "pwd", "date", "whoami", "uname", "df", "history", "clearhistory", NULL};
+
+    for (int i = 0; supported_commands[i] != NULL; i++)
+    {
+        if (strcmp(command, supported_commands[i]) == 0)
+        {
+            return 1; // Command is supported
+        }
+    }
+    return 0; // Command is not supported
+}
+
 int main()
 {
     char input[MAX_INPUT_SIZE];
@@ -107,6 +122,13 @@ int main()
         if (args[0] != NULL && strcmp(args[0], "clearhistory") == 0)
         {
             clear_history(history, &history_count);
+            continue;
+        }
+
+        // Check if the command is supported
+        if (args[0] != NULL && !is_supported_command(args[0]))
+        {
+            printf("Command not supported. Type 'help' for a list of supported commands.\n");
             continue;
         }
 

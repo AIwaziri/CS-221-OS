@@ -5,6 +5,7 @@
 #include <sys/wait.h>
 #include <string.h>
 #include <pthread.h>
+#include <stdbool.h>
 
 #define MAX_INPUT_SIZE 1024
 #define MAX_ARG_SIZE 100
@@ -31,6 +32,7 @@ void print_help()
     printf("  history\n");
     printf("  clearhistory\n");
     printf("  join\n");
+    printf("  exit\n");
 }
 
 void print_history(char history[][MAX_INPUT_SIZE], int history_count)
@@ -71,7 +73,21 @@ void get_command(char *prompt, char *input)
         perror("fgets failed");
         exit(EXIT_FAILURE);
     }
-    input[strcspn(input, "\n")] = 0; // Remove newline character
+    input[strcspn(input, "\n")] = 0;
+}
+
+bool is_supported_command(char *command)
+{
+    const char *supported_commands[] = {
+        "help", "ls", "ps", "pwd", "date", "whoami", "uname", "df", "history", "clearhistory", "join", "exit"};
+    for (int i = 0; i < sizeof(supported_commands) / sizeof(supported_commands[0]); i++)
+    {
+        if (strcmp(command, supported_commands[i]) == 0)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 int main()
@@ -123,6 +139,13 @@ int main()
             break;
         }
 
+        // Check if the command is supported
+        if (args[0] != NULL && !is_supported_command(args[0]))
+        {
+            printf("Error: '%s' is not a supported command.\n", args[0]);
+            continue;
+        }
+
         // Handle help command
         if (args[0] != NULL && strcmp(args[0], "help") == 0)
         {
@@ -138,7 +161,7 @@ int main()
         }
 
         // Handle clearhistory command
-        if (args[0] != NULL && strcmp(args[0], "clearhistory") == 0)
+        if (args[0] != NULL && strcmp(args[0], " clearhistory") == 0)
         {
             clear_history(history, &history_count);
             continue;

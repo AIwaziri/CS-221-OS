@@ -26,6 +26,20 @@ void print_help()
     printf("  df\n");
 }
 
+int is_command_supported(char *command)
+{
+    const char *supported_commands[] = {
+        "help", "ls", "ps", "pwd", "date", "whoami", "uname", "df"};
+    for (int i = 0; i < sizeof(supported_commands) / sizeof(supported_commands[0]); i++)
+    {
+        if (strcmp(command, supported_commands[i]) == 0)
+        {
+            return 1; // Command is supported
+        }
+    }
+    return 0; // Command is not supported
+}
+
 int main()
 {
     char input[MAX_INPUT_SIZE];
@@ -66,6 +80,13 @@ int main()
         if (args[0] != NULL && strcmp(args[0], "help") == 0)
         {
             print_help();
+            continue;
+        }
+
+        // Check if the command is supported
+        if (args[0] == NULL || !is_command_supported(args[0]))
+        {
+            printf("Error: Command '%s' is not supported.\n", args[0] ? args[0] : "NULL");
             continue;
         }
 
